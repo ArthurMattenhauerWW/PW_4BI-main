@@ -71,3 +71,38 @@ function find_all($table)
 {
 	return find($table);
 }
+
+function filter($table = null, $p = null){
+	$database = open_database();
+	$found = null;
+
+	try{
+		if($p){
+			$sql = "SELECT * FROM " . $table . " WHERE " . $p; 
+			$result = $database->query($sql);
+			if ($result->num_rows > 0) {
+				$found = array();
+				while ($row = $result->fetch_assoc()){
+					array_push($found, $row);
+				}
+			} else {
+				throw new Exception("Não foram encontrados registros de dados!");
+			}
+		}
+	} catch (Exception $e) {
+		$_SESSION['message'] = "Ocorreu um erro: " . $e->GetMessage();
+		$_SESSION['type'] = "danger";
+	}
+
+	close_database($database);
+	return $found;
+}
+
+function criptografia($senha) {
+    $custo = "08";
+    $salt = "CflflleParKlBJomM0F6aJ";
+
+    $hash = crypt($senha, "$2a$" . $custo . "$" . $salt . "$");
+
+    return $hash;
+}

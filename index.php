@@ -1,111 +1,123 @@
-<?php
-include "config.php";
+<?php include "config.php";
 include DBAPI;
-include HEADER_TEMPLATE;
-$erro = null;
-try {
-    $db = open_database();
-} catch (Exception $e) {
-    $erro = $e->getMessage();
+if (!isset($_SESSION)) session_start();
+include(HEADER_TEMPLATE);
+$erro =null;
+try{
+ $db = open_database(); 
+} catch (Exception $e){
+    $erro = $e;
+}?>
+
+<style>
+.btn-azul,
+.btn-azulclaro {
+    display: block;
+    width: 100%;
+    padding: 20px 15px;
+    border-radius: 12px;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    margin-bottom: 20px;
 }
-?>
 
-<h1>Dashboard</h1>
-<hr>
+.icone-branco {
+    color: #ffffff;
+    margin-bottom: 12px;
+    transition: transform 0.3s ease;
+}
 
-<?php if (!$erro): ?>
+.btn-azul p,
+.btn-azulclaro p {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 10px;
+    margin-bottom: 0;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.alert-danger {
+    border-radius: 8px;
+    border-left: 5px solid #dc3545;
+    padding: 15px 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+</style>
+
+
+<h1 class="mt-3 text-azul">Bem-Vindos ao Nosso Site!</h1>
+<hr />
+
+<?php if ($db): ?>
 
     <div class="row">
-        <div class="col-xs-6 col-sm-3 col-md-2">
-            <a href="customers/add.php" class="btn btn-secondary">
+        <div class="col-xs-6 col-sm-3 col-md-2 ">
+            <a href="laptops/add.php" class="btn btn-azul text-offwhite">
                 <div class="row">
-                    <div class="col-xs-12 text-center">
-                        <i class="fa fa-user-plus fa-5x"></i>
+                    <div class="col-xs-12 text-center ">
+                        <i class="fa-solid fa-laptop-medical fa-5x icone-branco"></i>
                     </div>
                     <div class="col-xs-12 text-center">
-                        <p>Novo Cliente</p>
+                        <p>Novo Laptop</p>
                     </div>
                 </div>
             </a>
         </div>
 
         <div class="col-xs-6 col-sm-3 col-md-2">
-            <a href="customers" class="btn btn-light">
+            <a href="laptops" class="btn btn-azulclaro text-offwhite">
                 <div class="row">
                     <div class="col-xs-12 text-center">
-                        <i class="fa fa-user-group fa-5x"></i>
+                        <i class="fa-solid fa-laptop fa-5x icone-branco"></i>
                     </div>
                     <div class="col-xs-12 text-center">
-                        <p>Clientes</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </div>
-    <div class="row mt-2">
-        <div class="col-xs-6 col-sm-3 col-md-2">
-            <a href="produtos/add.php" class="btn btn-secondary">
-                <div class="row">
-                    <div class="col-xs-12 text-center">
-                        <i class="fa fa-box-open fa-5x"></i>
-                    </div>
-                    <div class="col-xs-12 text-center">
-                        <p>Novo Produto</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col-xs-6 col-sm-3 col-md-2">
-            <a href="produtos" class="btn btn-light">
-                <div class="row">
-                    <div class="col-xs-12 text-center">
-                        <i class="fa fa-boxes fa-5x"></i>
-                    </div>
-                    <div class="col-xs-12 text-center">
-                        <p>Produtos</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </div>
-    <div class="row mt-2">
-        <div class="col-xs-6 col-sm-3 col-md-2">
-            <a href="usuarios/add.php" class="btn btn-secondary">
-                <div class="row">
-                    <div class="col-xs-12 text-center">
-                        <i class="fa fa-user-gear fa-5x"></i>
-                    </div>
-                    <div class="col-xs-12 text-center">
-                        <p>Novo Usuário</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col-xs-6 col-sm-3 col-md-2">
-            <a href="usuarios" class="btn btn-light">
-                <div class="row">
-                    <div class="col-xs-12 text-center">
-                        <i class="fa fa-users-gear fa-5x"></i>
-                    </div>
-                    <div class="col-xs-12 text-center">
-                        <p>Usuários</p>
+                        <p>Lista de Laptops</p>
                     </div>
                 </div>
             </a>
         </div>
     </div>
 
+    <?php if (isset($_SESSION['user']) && $_SESSION['user'] == "admin") : ?>
+        <div class="row">
+            <div class="col-xs-6 col-sm-3 col-md-2">
+                <a href="usuarios/add.php" class="btn btn-azul text-offwhite">
+                    <div class="row">
+                        <div class="col-xs-12 text-center">
+                            <i class="fa-solid fa-user-gear fa-5x icone-branco"></i>
+                        </div>
+                        <div class="col-xs-12 text-center">
+                            <p>Novo Usuário</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-xs-6 col-sm-3 col-md-2">
+                <a href="usuarios" class="btn btn-azulclaro text-offwhite">
+                    <div class="row">
+                        <div class="col-xs-12 text-center">
+                            <i class="fa-solid fa-users-gear fa-5x icone-branco"></i>
+                        </div>
+                        <div class="col-xs-12 text-center">
+                            <p>Usuários</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    <?php endif; ?>
 
 <?php else: ?>
     <div class="alert alert-danger" role="alert">
         <p>
             <b>ERRO:</b> Não foi possível Conectar ao Banco de Dados!<br>
-            <?= $erro; ?>
-            <?php //echo $erro; ?>
+            <?= $erro;?>
         </p>
     </div>
+
 <?php endif; ?>
 
-<?php include FOOTER_TEMPLATE; ?>
+<?php include(FOOTER_TEMPLATE); ?>
