@@ -2,7 +2,7 @@
 include DBAPI;
 if (!isset($_SESSION)) session_start();
 include(HEADER_TEMPLATE);
-$erro =null;
+$erro = null;
 try{
  $db = open_database(); 
 } catch (Exception $e){
@@ -46,17 +46,66 @@ try{
 }
 </style>
 
-
 <h1 class="mt-3 text-azul">Bem-Vindos ao Nosso Site!</h1>
 <hr />
 
 <?php if ($db): ?>
 
-    <div class="row">
-        <div class="col-xs-6 col-sm-3 col-md-2 ">
+    <!-- MÓDULO: CLIENTES -->
+    <h4 class="text-secondary mb-3"><i class="fa-solid fa-users"></i> CLIENTES</h4>
+    <div class="row mb-2">
+        <div class="col-xs-6 col-sm-6 col-md-3">
+            <a href="clientes" class="btn btn-azulclaro text-offwhite">
+                <div class="row">
+                    <div class="col-xs-12 text-center">
+                        <i class="fa-solid fa-users fa-5x icone-branco"></i>
+                    </div>
+                    <div class="col-xs-12 text-center">
+                        <p>Ver Clientes</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <?php if (isset($_SESSION['user'])) : ?>
+        <div class="col-xs-6 col-sm-6 col-md-3">
+            <a href="clientes/add.php" class="btn btn-azul text-offwhite">
+                <div class="row">
+                    <div class="col-xs-12 text-center">
+                        <i class="fa-solid fa-user-plus fa-5x icone-branco"></i>
+                    </div>
+                    <div class="col-xs-12 text-center">
+                        <p>Novo Cliente</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <hr class="my-3">
+
+    <!-- MÓDULO: LAPTOPS -->
+    <h4 class="text-secondary mb-3"><i class="fa-solid fa-laptop"></i> Laptops</h4>
+    <div class="row mb-2">
+        <div class="col-xs-6 col-sm-6 col-md-3">
+            <a href="laptops" class="btn btn-azulclaro text-offwhite">
+                <div class="row">
+                    <div class="col-xs-12 text-center">
+                        <i class="fa-solid fa-laptop-code fa-5x icone-branco"></i>
+                    </div>
+                    <div class="col-xs-12 text-center">
+                        <p>Ver Laptops</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <?php if (isset($_SESSION['user'])) : ?>
+        <div class="col-xs-6 col-sm-6 col-md-3">
             <a href="laptops/add.php" class="btn btn-azul text-offwhite">
                 <div class="row">
-                    <div class="col-xs-12 text-center ">
+                    <div class="col-xs-12 text-center">
                         <i class="fa-solid fa-laptop-medical fa-5x icone-branco"></i>
                     </div>
                     <div class="col-xs-12 text-center">
@@ -65,24 +114,28 @@ try{
                 </div>
             </a>
         </div>
-
-        <div class="col-xs-6 col-sm-3 col-md-2">
-            <a href="laptops" class="btn btn-azulclaro text-offwhite">
-                <div class="row">
-                    <div class="col-xs-12 text-center">
-                        <i class="fa-solid fa-laptop fa-5x icone-branco"></i>
-                    </div>
-                    <div class="col-xs-12 text-center">
-                        <p>Lista de Laptops</p>
-                    </div>
-                </div>
-            </a>
-        </div>
+        <?php endif; ?>
     </div>
 
-    <?php if (isset($_SESSION['user']) && $_SESSION['user'] == "admin") : ?>
+    <!-- MÓDULO: USUÁRIOS (Apenas para Admin) -->
+    <?php if (isset($_SESSION['user']) && isset($_SESSION['perfil']) && $_SESSION['perfil'] == "admin") : ?>
+        <hr class="my-3">
+        <h4 class="text-secondary mb-3"><i class="fa-solid fa-user-gear"></i> Usuários</h4>
         <div class="row">
-            <div class="col-xs-6 col-sm-3 col-md-2">
+            <div class="col-xs-6 col-sm-6 col-md-3">
+                <a href="usuarios" class="btn btn-azulclaro text-offwhite">
+                    <div class="row">
+                        <div class="col-xs-12 text-center">
+                            <i class="fa-solid fa-users-gear fa-5x icone-branco"></i>
+                        </div>
+                        <div class="col-xs-12 text-center">
+                            <p>Ver Usuários</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-xs-6 col-sm-6 col-md-3">
                 <a href="usuarios/add.php" class="btn btn-azul text-offwhite">
                     <div class="row">
                         <div class="col-xs-12 text-center">
@@ -90,19 +143,6 @@ try{
                         </div>
                         <div class="col-xs-12 text-center">
                             <p>Novo Usuário</p>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-xs-6 col-sm-3 col-md-2">
-                <a href="usuarios" class="btn btn-azulclaro text-offwhite">
-                    <div class="row">
-                        <div class="col-xs-12 text-center">
-                            <i class="fa-solid fa-users-gear fa-5x icone-branco"></i>
-                        </div>
-                        <div class="col-xs-12 text-center">
-                            <p>Usuários</p>
                         </div>
                     </div>
                 </a>
@@ -117,7 +157,6 @@ try{
             <?= $erro;?>
         </p>
     </div>
-
 <?php endif; ?>
 
 <?php include(FOOTER_TEMPLATE); ?>

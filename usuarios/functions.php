@@ -1,255 +1,192 @@
 <?php
-ob_start();
 
-include "../config.php";
-include DBAPI;
-
-$users = null;
-$user = null;
-
-/**
- *  Fomatar as datas
- */
-
-
-function formatadata($data, $formato)
-{
-    $dt = new DateTime($data, new DateTimeZone("America/Sao_Paulo")); // "-0300"
-    return $dt->format($formato);
+if (!defined('ABSPATH')) {
+    include('../config.php');
 }
+require_once(DBAPI);
+
+$usuarios = null;
+$usuario = null;
 
 /**
- *  Fomatar as telefones
- */
-function telefone($tel)
-{ //15997332244
-    return "(" . substr($tel, 0, 2) . ")" . substr($tel, 2, 5)
-        . "-" . substr($tel, 7, 4);
-}
-
-/**
- *  Fomatar as telefones
- */
-function cep($cep)
-{
-    // Se vira para fazer
-}
-
-/**
- *  Listagem de Usuários
+ * Listar todos os Usuários
  */
 function index() {
-    global $users;
-    if(!empty($_POST['users'])){
-        $users = filter("users", "nome like '%" . $_POST['users'] . "%'");
+    global $usuarios;
+    
+    $database = open_database();
+    $result = $database->query("SELECT * FROM usuarios ORDER BY id DESC");
+    
+    if ($result->num_rows > 0) {
+        $usuarios = $result->fetch_all(MYSQLI_ASSOC);
     } else {
-        $users = find_all("users");
+        $usuarios = null;
     }
-}
-
-
-function upload($pasta_destino, $arquivo_destino, $tipo_arquivo, $nome_temp, $tamanho_arquivo){
-    try {
-        $nomearquivo = basename($arquivo_destino);
-        $uploadOK = 1;
-        //verificando se o arquivo é uma imagem
-        if(isset($_POST["submit"])) {
-            $check = getimagesize($nome_temp);
-            if($check !== false) {
-                $_SESSION['message'] = "File is an image - " . $check["mime"] . ".";
-                $_SESSION['type'] = 'info';
-                $uploadOK = 1;
-            } else {
-                $uploadOK = 0;
-                throw new Exception("O arquivo não é uma imagem!");
-            }
-        }
-
-        //verificando se o arquivo ja existe na pasta
-        if (file_exists($arquivo_destino)) {
-            $uploadOK = 0;
-            throw new Exception("Desculpe, o arquivo já existe!");
-        }
-
-        //verificando o tamanho do arquivo
-        if ($tamanho_arquivo > 5000000) {
-            $uploadOK = 0;
-            throw new Exception("Desculpe, mas o arquivo é muito grande!");
-        }
-
-        //permitindo certos formatos
-        if($tipo_arquivo != "jpg" && $tipo_arquivo != "png" && $tipo_arquivo !="jpeg" && $tipo_arquivo !="gif" ) {
-            $uploadOK = 0;
-            throw new Exception("Desculpe, mas o arquivo não pode ser enviado.");
-        }
-
-        //verificando se $uploadOK foi definido como 0 devido a um erro
-        if  ($uploadOK == 0) {
-            throw new Exception("Desculpe, mas o arquivo não pode ser enviado");
-        } else {
-            //se tudo estiver ok, tentamos fazer o upload do arquivo
-            if (move_uploaded_file($_FILES["foto"]["tmp_name"], $arquivo_destino)) {
-                //colocando o nome do arquivo da foto do usuario no vetor
-                $_SESSION['message'] = "O arquivo " . htmlspecialchars($nomearquivo) . " foi armazenado.";
-                $_SESSION['type'] = "success";
-            } else {
-                throw new Exception("Desculpe, mas o arquivo não pode ser enviado.");
-            }
-        }
-
-
-    } catch (Exception $e) {
-        $_SESSION['message'] = "Aconteceu um erro: " . $e->getMessage();
-        $_SESSION['type'] = "danger";
-    }
+    
+    $database->close();
 }
 
 /**
- *  Visualização de um Usuário
+ * Obter um Usuário por ID
  */
-function view($id = null)
-{
-    global $user;
-    $user = find("usuarios", $id);
+function view($id = null) {
+    global $usuario;
+    
+    $database = open_database();
+    $result = $database->query("SELECT * FROM usuarios WHERE id = " . (int)$id);
+    
+    if ($result->num_rows > 0) {
+        $usuario = $result->fetch_assoc();
+    } else {
+        $usuario = null;
+    }
+    
+    $database->close();
 }
 
 /**
- *  Cadastro de Usuários
+ * Registo de novo Usuário (Foto opcional -> default.png)
  */
 function add() {
     if (!empty($_POST['usuario'])) {
-        try {
-            $user = $_POST['usuario'];
-
-            if (!empty($_FILES["foto"]["name"])) {
-                //upload da foto
-                $pasta_destino = "fotos/"; //pasta onde ficam as fotos
-                $arquivo_destino = $pasta_destino . basename($_FILES["fotos"]["name"]); //caminho completo até o arquivo que será gravado
-                $nomearquivo = basename($_FILES["foto"]["name"]); //nome do arquivo
-                $resolucao_arquivo = getimagesize($_FILES["foto"]["tmp_name"]); 
-                $tamanho_arquivo = $_FILES["foto"]["size"]; //tamanho do arquivo em bytes
-                $nome_temp = $_FILES["foto"]["tmp_name"]; //nome e caminho do arquivo no servidor
-                $tipo_arquivo = strtolower(pathinfo($arquivo_destino, PATHINFO_EXTENSION)); //extensão do arquivo
-
-                //chamada da função upload para gravar a imagem
-                upload($pasta_destino, $arquivo_destino, $tipo_arquivo, $nome_temp, $tamanho_arquivo);
-
-                $user['foto'] = $nomearquivo;
-            }
-            //criptografando a senha
-            if(!empty($usuario['password'])) {
-                $senha = criptografia($user['passoword']);  
-                $usuario['password'] = $senha;
-            }
-
-            $user['foto'] = $nomearquivo;
-
-            save('usuarios', $usuario);
-            header('Location: index.php');
-        } catch (Exception $e) {
-            $_SESSION['message'] = "Aconteceu um erro: " . $e->getMessage();
-            $_SESSION['type'] = "danger"; 
+        $usuario = $_POST['usuario'];
+        
+        // 1. Criptografar a senha
+        if (!empty($usuario['password'])) {
+            $usuario['password'] = criptografia($usuario['password']);
         }
 
-        //$today = date_create('now', new DateTimeZone('America/Sao_Paulo'));
-        //$today = new DateTime("now", new DateTimeZone("-0300"));
+        // 2. Tratar o upload da foto, se houver
+        if (!empty($_FILES['foto']['name'])) {
+            $uploaded_name = $_FILES['foto']['name'];
+            $target_dir = ABSPATH . 'assets/img/';
+            
+            $file_extension = pathinfo($uploaded_name, PATHINFO_EXTENSION);
+            $new_filename = uniqid('user_') . '.' . $file_extension;
+            $target_file = $target_dir . $new_filename;
+
+            if (move_uploaded_file($_FILES['foto']['tmp_name'], $target_file)) {
+                $usuario['foto'] = $new_filename;
+            } else {
+                $usuario['foto'] = 'semfoto.jpg';
+            }
+        } else {
+            // Se nenhuma foto foi enviada, assume a imagem padrão
+            $usuario['foto'] = 'semfoto.jpg';
+        }
+
+        // 3. Salvar na base de dados
+        $database = open_database();
+        
+        $nome = $database->real_escape_string($usuario['nome']);
+        $user = $database->real_escape_string($usuario['user']);
+        $password = $database->real_escape_string($usuario['password']);
+        $perfil = $database->real_escape_string($usuario['perfil']);
+        $foto = $database->real_escape_string($usuario['foto']);
+
+        $sql = "INSERT INTO usuarios (nome, user, password, perfil, foto) VALUES ('$nome', '$user', '$password', '$perfil', '$foto')";
+        
+        if ($database->query($sql) === TRUE) {
+            $_SESSION['message'] = "Usuário cadastrado com sucesso!";
+            $_SESSION['type'] = "success";
+            header('location: index.php');
+        } else {
+            $_SESSION['message'] = "Erro ao cadastrar usuário: " . $database->error;
+            $_SESSION['type'] = "danger";
+        }
+
+        $database->close();
     }
 }
-// Modifique os elementos abaixo, pois não estão adaptados ainda
+
 /**
- * Atualizacao/Edicao de Usuário
+ * Atualizar / Editar Usuário (Mantém a foto atual se nenhuma nova for enviada)
  */
 function edit() {
-        try {
-            if (isset($_GET['id'])) {
-                $id = $_GET['id'];
+    $database = open_database();
 
-                if (isset($_POST['usuario'])) {
+    if (isset($_GET['id'])) {
+        $id = $_GET['id'];
+        
+        if (isset($_POST['usuario'])) {
+            $usuario = $_POST['usuario'];
+            
+            // Se preencheu nova senha, criptografa. Caso contrário, remove para não alterar.
+            if (!empty($usuario['password'])) {
+                $usuario['password'] = criptografia($usuario['password']);
+            } else {
+                unset($usuario['password']);
+            }
 
-                    $user = $_POST['usuario'];
-
-                    //criptografando a senha
-                    if(!empty($usuario['password'])) {
-                        $senha = criptografia($user['passoword']);  
-                        $usuario['password'] = $senha;
-                    }
-
-                    if (!empty($_FILES["foto"]["name"])) {
-                        //upload da foto
-                        $pasta_destino = "fotos/"; //pasta onde ficam as fotos
-                        $arquivo_destino = $pasta_destino . basename($_FILES["fotos"]["name"]); //caminho completo até o arquivo que será gravado
-                        $nomearquivo = basename($_FILES["foto"]["name"]); //nome do arquivo
-                        $resolucao_arquivo = getimagesize($_FILES["foto"]["tmp_name"]); 
-                        $tamanho_arquivo = $_FILES["foto"]["size"]; //tamanho do arquivo em bytes
-                        $nome_temp = $_FILES["foto"]["tmp_name"]; //nome e caminho do arquivo no servidor
-                        $tipo_arquivo = strtolower(pathinfo($arquivo_destino, PATHINFO_EXTENSION)); //extensão do arquivo
-
-                        //chamada da função upload para gravar a imagem
-                        upload($pasta_destino, $arquivo_destino, $tipo_arquivo, $nome_temp, $tamanho_arquivo);
-
-                        $user['foto'] = $nomearquivo;
-                    }
-                    
-                    
-                    $user['foto'] = $nomearquivo;
-
-                    update('usuarios', $id, $usuario);
-                    header('Location: index.php');
-                } else {
-                    global $usuario;
-                    $usuario = find("usuarios", $id);
+            // Tratar nova foto se enviada
+            if (!empty($_FILES['foto']['name'])) {
+                $uploaded_name = $_FILES['foto']['name'];
+                $target_dir = ABSPATH . 'assets/img/';
+                $file_extension = pathinfo($uploaded_name, PATHINFO_EXTENSION);
+                $new_filename = uniqid('user_') . '.' . $file_extension;
+                
+                if (move_uploaded_file($_FILES['foto']['tmp_name'], $target_dir . $new_filename)) {
+                    $usuario['foto'] = $new_filename;
                 }
-                } else {
-                    header("Location: index.php");
-                }
-        } catch (Exception $e) {
-                    $_SESSION['message'] = "Aconteceu um erro: " . $e->getMessage();
-                    $_SESSION['type'] = "danger";
+            }
+
+            // Construir query de atualização dinâmica
+            $nome = $database->real_escape_string($usuario['nome']);
+            $user = $database->real_escape_string($usuario['user']);
+            $perfil = $database->real_escape_string($usuario['perfil']);
+            
+            $sql = "UPDATE usuarios SET nome = '$nome', user = '$user', perfil = '$perfil'";
+            
+            if (isset($usuario['password'])) {
+                $password = $database->real_escape_string($usuario['password']);
+                $sql .= ", password = '$password'";
+            }
+            if (isset($usuario['foto'])) {
+                $foto = $database->real_escape_string($usuario['foto']);
+                $sql .= ", foto = '$foto'";
+            }
+            
+            $sql .= " WHERE id = " . (int)$id;
+
+            if ($database->query($sql) === TRUE) {
+                $_SESSION['message'] = "Usuário atualizado com sucesso!";
+                $_SESSION['type'] = "success";
+                header('location: index.php');
+            } else {
+                $_SESSION['message'] = "Erro ao atualizar usuário: " . $database->error;
+                $_SESSION['type'] = "danger";
+            }
+        } else {
+            global $usuario;
+            $result = $database->query("SELECT * FROM usuarios WHERE id = " . (int)$id);
+            if ($result->num_rows > 0) {
+                $usuario = $result->fetch_assoc();
+            }
         }
-        //$today = date_create('now', new DateTimeZone('America/Sao_Paulo'));
-        //$today = new DateTime("now", new DateTimeZone("-0300"));
+    } else {
+        header('location: index.php');
     }
-
-    //$now = date_create('now', new DateTimeZone('America/Sao_Paulo'));
-    // $now = new DateTime("now", new DateTimeZone("-0300"));
-    // if (isset($_GET['id'])) {
-
     
-
-    //     $id = $_GET['id'];
-
-    //     if (isset($_POST['customer'])) {
-
-    //         $customer = $_POST['customer'];
-    //         $customer['modified'] = $now->format("Y-m-d H:i:s");
-
-    //         update("customers", $id, $customer);
-    //         header("location: index.php");
-    //     } else {
-
-    //         global $customer;
-    //         $customer = find("customers", $id);
-    //     }
-    // } else {
-    //     header("location: index.php");
-    // }
-
+    $database->close();
+}
 
 /**
- *  Exclusão de um Cliente
+ * Apagar um Usuário
  */
-function delete($id = null)
-{
-
-    global $customer;
-    $customer = remove("customers", $id);
-
-    header("location: index.php");
+function delete($id = null) {
+    $database = open_database();
+    
+    $id = (int)$id;
+    $sql = "DELETE FROM usuarios WHERE id = $id";
+    
+    if ($database->query($sql) === TRUE) {
+        $_SESSION['message'] = "Usuário excluído com sucesso!";
+        $_SESSION['type'] = "success";
+    } else {
+        $_SESSION['message'] = "Erro ao excluir usuário: " . $database->error;
+        $_SESSION['type'] = "danger";
+    }
+    
+    $database->close();
+    header('location: index.php');
 }
-
-function clear_message() {
-    $_SESSION['message'] = null;
-    $_SESSION['type'] = null;
-}
-
-?>

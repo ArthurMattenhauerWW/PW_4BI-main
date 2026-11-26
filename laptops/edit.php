@@ -1,9 +1,64 @@
-<?php 
-  include('functions.php'); 
-  edit();
-  include(HEADER_TEMPLATE); ?>
+
+<?php
+
+require_once('../config.php');
+
+// Iniciar sessão
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// VERIFICAÇÃO DE ACESSO
+try {
+
+    if (empty($_SESSION['user'])) {
+        throw new Exception(
+            "Para acessar esta página é necessário estar logado."
+        );
+    }
+
+} catch (Exception $e) {
+
+    include(HEADER_TEMPLATE);
+    ?>
+
+    <div class="alert alert-danger mt-4" role="alert">
+
+        <h5>
+            <i class="fa-solid fa-lock"></i>
+            Acesso negado!
+        </h5>
+
+        <?php echo htmlspecialchars($e->getMessage()); ?>
+
+        <hr>
+
+        <a href="<?php echo BASEURL; ?>index.php"
+           class="btn btn-azulclaro text-offwhite">
+
+            <i class="fa-solid fa-circle-left"></i>
+            Voltar para o início
+
+        </a>
+
+    </div>
+
+    <?php
+    include(FOOTER_TEMPLATE);
+    exit;
+}
+
+// Se chegou aqui, está logado e pode continuar
+require_once('functions.php');
+
+edit();
+
+include(HEADER_TEMPLATE);
+
+?>
 
 <style>
+
 .form-group label {
     font-weight: 600;
     color: #333;
@@ -46,73 +101,143 @@
 #actions .btn i {
     margin-right: 6px;
 }
+
 </style>
+
 
 <h2 class="mt-3">Atualizar Laptop Cadastrado</h2>
 
-<form action="edit.php?id=<?php echo $laptop['id']; ?>" method="post" enctype="multipart/form-data">
-  <hr />
-  
-  <div class="row">
-    <div class="col-md-6">
-      <div class="form-group mb-3">
-        <label for="marca">Marca</label>
-        <input type="text" class="form-control" id="marca" name="laptop[marca]" 
-               value="<?php echo $laptop['marca']; ?>" required>
-      </div>
+<form action="edit.php?id=<?php echo $laptop['id']; ?>"
+      method="post"
+      enctype="multipart/form-data">
 
-      <div class="form-group mb-3">
-        <label for="modelo">Modelo</label>
-        <input type="text" class="form-control" id="modelo" name="laptop[modelo]" 
-               maxlength="50" value="<?php echo $laptop['modelo']; ?>" required>
-      </div>
+    <hr />
 
-      <div class="form-group mb-3">
-        <label for="tamanho">Tamanho</label>
-        <input type="text" class="form-control" id="tamanho" name="laptop[tamanho]" 
-               value="<?php echo $laptop['tamanho']; ?>" required>
-      </div>
+    <div class="row">
 
-      <div class="form-group mb-3">
-        <label for="foto">Trocar Foto (opcional)</label>
-        <input type="file" class="form-control" id="foto" name="foto" 
-               accept="image/*" onchange="previewImagem(event)">
-        <small class="text-muted">Deixe vazio para manter a foto atual.</small>
-      </div>
+        <div class="col-md-6">
+
+            <div class="form-group mb-3">
+
+                <label for="marca">Marca</label>
+
+                <input type="text"
+                       class="form-control"
+                       id="marca"
+                       name="laptop[marca]"
+                       value="<?php echo htmlspecialchars($laptop['marca']); ?>"
+                       required>
+
+            </div>
+
+
+            <div class="form-group mb-3">
+
+                <label for="modelo">Modelo</label>
+
+                <input type="text"
+                       class="form-control"
+                       id="modelo"
+                       name="laptop[modelo]"
+                       maxlength="50"
+                       value="<?php echo htmlspecialchars($laptop['modelo']); ?>"
+                       required>
+
+            </div>
+
+
+            <div class="form-group mb-3">
+
+                <label for="tamanho">Tamanho</label>
+
+                <input type="text"
+                       class="form-control"
+                       id="tamanho"
+                       name="laptop[tamanho]"
+                       value="<?php echo htmlspecialchars($laptop['tamanho']); ?>"
+                       required>
+
+            </div>
+
+
+            <div class="form-group mb-3">
+
+                <label for="foto">Trocar Foto (opcional)</label>
+
+                <input type="file"
+                       class="form-control"
+                       id="foto"
+                       name="foto"
+                       accept="image/*"
+                       onchange="previewImagem(event)">
+
+                <small class="text-muted">
+                    Deixe vazio para manter a foto atual.
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-6 d-flex align-items-center justify-content-center">
+
+            <img id="img-preview"
+                 src="<?php echo BASEURL; ?>assets/img/<?php echo rawurlencode(basename($laptop['foto'])); ?>"
+                 alt="<?php echo htmlspecialchars($laptop['modelo']); ?>"
+                 class="foto-laptop-edit">
+
+        </div>
+
     </div>
 
-    <div class="col-md-6 d-flex align-items-center justify-content-center">
-      <img id="img-preview" 
-           src="<?php echo BASEURL; ?>assets/img/<?php echo $laptop['foto']; ?>" 
-           alt="<?php echo $laptop['modelo']; ?>" 
-           class="foto-laptop-edit">
-    </div>
-  </div>
 
-  <div id="actions" class="row mt-3">
-    <div class="col-md-12">
-      <button type="submit" class="btn btn-azul text-offwhite">
-        <i class="fa-solid fa-floppy-disk"></i> Salvar
-      </button>
-      <a href="index.php" class="btn btn-azulclaro text-offwhite">
-        <i class="fa-solid fa-ban"></i> Cancelar
-      </a>
+    <div id="actions" class="row mt-3">
+
+        <div class="col-md-12">
+
+            <button type="submit" class="btn btn-azul text-offwhite">
+
+                <i class="fa-solid fa-floppy-disk"></i>
+                Salvar
+
+            </button>
+
+            <a href="index.php" class="btn btn-azulclaro text-offwhite">
+
+                <i class="fa-solid fa-ban"></i>
+                Cancelar
+
+            </a>
+
+        </div>
+
     </div>
-  </div>
+
 </form>
 
+
 <script>
-  function previewImagem(event) {
+
+function previewImagem(event) {
+
     const input = event.target;
     const preview = document.getElementById('img-preview');
+
     if (input.files && input.files[0]) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        preview.src = e.target.result;
-      }
-      reader.readAsDataURL(input.files[0]);
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+        };
+
+        reader.readAsDataURL(input.files[0]);
+
     }
-  }
+
+}
+
 </script>
 
 <?php include(FOOTER_TEMPLATE); ?>

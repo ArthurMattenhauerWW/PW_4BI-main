@@ -1,52 +1,111 @@
+
 <?php
-    //view.php
-    include ("functions.php");
-    view($_GET['id']);
-    include (HEADER_TEMPLATE);
-?>
+require_once('../config.php');
 
-    <?php if (!empty($_SESSION['message'])) : ?>
-        <div class="alert alert-<?php echo $_SESSION['type']; ?> alert-dismissible" role="alert" id="actions">
-            <?php echo $_SESSION['message']; ?>
-            <button type ="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cloese"></button>
-        </div>
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-    <?php else : ?>
-        <header>
-            <h2 class="mt-3 text-azul">Usuário <?php echo $user['id']; ?></h2>
-        </header>
+require_once('functions.php');
+
+// Verifica se o usuário está logado e é administrador
+if (
+    empty($_SESSION['user']) ||
+    !isset($_SESSION['perfil']) ||
+    $_SESSION['perfil'] !== 'admin'
+) {
+    include(HEADER_TEMPLATE);
+    ?>
+
+    <div class="alert alert-danger mt-4 container" role="alert">
+        <h5>
+            <i class="fa-solid fa-lock"></i>
+            Acesso negado!
+        </h5>
+
+        Você não tem permissão para visualizar os dados dos usuários.
+        Somente administradores logados podem acessar esta página.
+
         <hr>
 
-        <dl class="dl-horizontal">
-            <dt>Nome:</dt>
-            <dd><?php echo $user['nome']; ?></dd>
+        <a href="<?php echo BASEURL; ?>index.php"
+           class="btn btn-azulclaro text-offwhite">
+            <i class="fa-solid fa-circle-left"></i>
+            Voltar para o início
+        </a>
+    </div>
 
-            <dt>Login:</dt>
-            <dd><?php echo $user['user']; ?></dd>
+    <?php
+    include(FOOTER_TEMPLATE);
+    exit;
+}
 
-            <dt>Senha:</dt>
-            <dd><?php echo $user['password']; ?></dd>
+// Verifica se o ID foi informado
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    header('location: index.php');
+    exit();
+}
 
-            <dt>Foto:</dt>
-            <dd><?php 
-                    if(!empty($user['foto'])) {
-                        echo "<img src=\"fotos/" . $user['foto'] . "\" class=\"shadow p-1 mb-1 bg-body rounded\" width=\"300px\">";
-                    } else {
-                        echo "<img src=\"fotos/semimagem.jpg\" class=\"shadow p-1 mb-1 bg-body rounded\" width=\"300px\">";
-                    }
-                    ?>
-            </dd>
-        </dl>
-    <?php endif; ?>
-        <div id="actions" class="row">
-            <div class="col-md-12">
-                <?php if (empty($_SESSION['message'])) : ?>
-                <a href="edit.php?id=<?php echo $user['id']; ?>" class="btn btn-azul text-offwhite"><i class="fa-solid fa-pen-to-square text-offwhite"></i> Editar</a>
-                <?php endif; ?>
-                <a href="index.php" class="btn btn-azulclaro text-offwhite"><i class="fa-solid fa-circle-left text-offwhite"></i> Voltar</a>
-            </div>
+view($_GET['id']);
+
+include(HEADER_TEMPLATE);
+?>
+
+<header class="container mt-4">
+    <h2>Visualizar Usuário #<?php echo $usuario['id']; ?></h2>
+    <hr />
+</header>
+
+<?php if (!empty($_SESSION['message'])) : ?>
+    <div class="alert alert-<?php echo $_SESSION['type']; ?> container" role="alert">
+        <?php echo $_SESSION['message']; ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <?php unset($_SESSION['message'], $_SESSION['type']); ?>
+<?php endif; ?>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <dl class="dl-horizontal">
+                <dt><strong>Nome:</strong></dt>
+                <dd><?php echo htmlspecialchars($usuario['nome']); ?></dd>
+
+                <dt class="mt-2"><strong>Usuário (Login):</strong></dt>
+                <dd><?php echo htmlspecialchars($usuario['user']); ?></dd>
+
+                <dt class="mt-2"><strong>Tipo de Perfil:</strong></dt>
+                <dd>
+                    <span class="badge bg-secondary">
+                        <?php echo htmlspecialchars(ucfirst($usuario['perfil'])); ?>
+                    </span>
+                </dd>
+            </dl>
         </div>
-    
-<?php include(FOOTER_TEMPLATE) ?>
 
-<?php clear_message();  ?>
+        <div class="col-md-6 text-center">
+            <label><strong>Foto do Usuário:</strong></label><br>
+
+            <img
+                src="<?php echo BASEURL; ?>assets/img/<?php echo !empty($usuario['foto']) ? rawurlencode(basename($usuario['foto'])) : 'default.png'; ?>"
+                alt="Foto do Usuário"
+                class="img-thumbnail rounded-circle mt-2"
+                style="max-height: 180px; width: 180px; object-fit: cover;"
+            >
+        </div>
+    </div>
+
+    <div id="actions" class="row mt-4">
+        <div class="col-md-12">
+            <a href="edit.php?id=<?php echo $usuario['id']; ?>" class="btn btn-warning">
+                <i class="fa fa-pencil"></i> Editar
+            </a>
+
+            <a href="index.php" class="btn btn-azulclaro text-offwhite">
+                <i class="fa-solid fa-circle-left text-offwhite"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<?php include(FOOTER_TEMPLATE); ?>

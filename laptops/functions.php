@@ -15,8 +15,6 @@ function formatdata($data, $formato) {
   return $dt->format($formato);
 }
 
-
-
 /**
  * Listagem de Laptops
  */
@@ -34,7 +32,7 @@ function view($id = null) {
 }
 
 /**
- * Cadastro de Laptop
+ * Cadastro de Laptop (Com foto opcional -> semfoto.jpg)
  */
 function add() {
   if (!empty($_POST['laptop'])) {
@@ -52,10 +50,11 @@ function add() {
       if (move_uploaded_file($_FILES['foto']['tmp_name'], $destino)) {
         $laptop['foto'] = $nomeFoto;
       } else {
-        $laptop['foto'] = 'default.png';
+        $laptop['foto'] = 'semfoto.jpg';
       }
     } else {
-      $laptop['foto'] = 'default.png';
+      // Se nenhuma foto foi enviada, assume 'semfoto.jpg'
+      $laptop['foto'] = 'semfoto.jpg';
     }
 
     save('laptops', $laptop);
@@ -65,16 +64,12 @@ function add() {
 }
 
 function save($table = null, $data = null) {
-
   $database = open_database();
 
   $columns = null;
   $values = null;
 
-  //print_r($data);
-
   foreach ($data as $key => $value) {
-	//$columns = $columns . trim($key, "'") . ",";
     $columns .= trim($key, "'") . ",";
     $values .= "'$value',";
   }
@@ -83,7 +78,6 @@ function save($table = null, $data = null) {
   $columns = rtrim($columns, ',');
   $values = rtrim($values, ',');
   
-  //$sql = "INSERT INTO " . $table . "($columns)" . " VALUES " . "($values);";
   $sql = "INSERT INTO  $table ($columns) VALUES ($values);";
 
   try {
@@ -93,7 +87,6 @@ function save($table = null, $data = null) {
     $_SESSION['type'] = 'success';
   
   } catch (Exception $e) { 
-  
     $_SESSION['message'] = 'Nao foi possivel realizar a operacao.';
     $_SESSION['type'] = 'danger';
   } 
@@ -101,9 +94,8 @@ function save($table = null, $data = null) {
   close_database($database);
 }
 
-
 /**
- * Atualização/Edição de Laptop
+ * Atualização/Edição de Laptop (Mantém a foto atual se nenhuma nova for enviada)
  */
 function edit() {
   $now = new DateTime('now', new DateTimeZone('America/Sao_Paulo'));
@@ -114,7 +106,6 @@ function edit() {
     if (isset($_POST['laptop'])) {
       $laptop = $_POST['laptop'];
       $laptop['datamod'] = $now->format("Y-m-d H:i:s");
-
       
       if (!empty($_FILES['foto']['name'])) {
         $ext = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
@@ -124,6 +115,9 @@ function edit() {
         if (move_uploaded_file($_FILES['foto']['tmp_name'], $destino)) {
           $laptop['foto'] = $nomeFoto;
         }
+      } else {
+        // Se não enviou nova foto, removemos do array para manter a foto atual na BD
+        unset($laptop['foto']);
       }
       
       update("laptops", $id, $laptop);

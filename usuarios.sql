@@ -1,4 +1,5 @@
 -- Script para criar e cadastrar na tabela usuários (execute no banco do projeto):
+use laptop;
 CREATE TABLE usuarios(
     id int AUTO_INCREMENT not null PRIMARY KEY,
     nome varchar(50) not null,
@@ -10,3 +11,6 @@ INSERT INTO usuarios (nome, user, password)
 VALUES ('Zé Lele','zelele','5243897562837456982'),
 ('Mary Zica','mazi','786098767869'),
 ('Fugiru Nakombi','fugina','623485634753234');
+
+ALTER TABLE usuarios ADD COLUMN perfil VARCHAR(20) NOT NULL DEFAULT 'comum';
+
