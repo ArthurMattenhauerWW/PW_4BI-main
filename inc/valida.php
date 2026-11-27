@@ -91,8 +91,7 @@ try {
             $_SESSION['foto'] = $foto;
 
             // Mensagem de boas-vindas
-            $_SESSION['message'] = "Bem-vindo, " . $nome . "!";
-            $_SESSION['type'] = "success";
+            $_SESSION['bem_vindo'] = "Bem-vindo, " . $nome . "!";
 
             $stmt->close();
             $bd->close();

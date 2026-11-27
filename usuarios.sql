@@ -8,9 +8,11 @@ CREATE TABLE usuarios(
     foto varchar(50)
 );
 INSERT INTO usuarios (nome, user, password) 
-VALUES ('Zé Lele','zelele','5243897562837456982'),
+VALUES ('Zé Lele','zelele','5243897562837456982');
 ('Mary Zica','mazi','786098767869'),
 ('Fugiru Nakombi','fugina','623485634753234');
 
 ALTER TABLE usuarios ADD COLUMN perfil VARCHAR(20) NOT NULL DEFAULT 'comum';
 
+INSERT INTO usuarios (nome, user, password, perfil) 
+VALUES ('admin','admin','$2a$08$CflflleParKlBJomM0F6a.qYxESJBgsQ/ruqrhYSMMaj/U5534Eze','admin');

@@ -39,7 +39,9 @@ function add() {
         $cliente = $_POST['cliente'];
 
         // Define a data e hora de São Paulo
-        
+        date_default_timezone_set('America/Sao_Paulo');
+        $cliente['criado_em'] = date('Y-m-d H:i:s');
+
         // Trata o upload da foto
         if (!empty($_FILES['foto']['name'])) {
 
@@ -65,6 +67,7 @@ function add() {
         exit();
     }
 }
+
 /**
  * Salvar um registro na tabela
  */

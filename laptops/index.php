@@ -9,40 +9,9 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once('functions.php');
 
-// Verifica se o usuário está logado e é administrador
-if (
-    empty($_SESSION['user']) ||
-    !isset($_SESSION['perfil']) ||
-    $_SESSION['perfil'] !== 'admin'
-) {
-    include(HEADER_TEMPLATE);
-    ?>
-
-    <div class="alert alert-danger mt-4 container" role="alert">
-        <h5>
-            <i class="fa-solid fa-lock"></i>
-            Acesso negado!
-        </h5>
-
-        Você não tem permissão para acessar o gerenciamento de usuários.
-        Somente administradores podem acessar esta página.
-
-        <hr>
-
-        <a href="<?php echo BASEURL; ?>index.php"
-           class="btn btn-azulclaro text-offwhite">
-            <i class="fa-solid fa-circle-left"></i>
-            Voltar para o início
-        </a>
-    </div>
-
-    <?php
-    include(FOOTER_TEMPLATE);
-    exit;
-}
-
-// Se passou pela verificação, pode listar os usuários
+// Todos podem visualizar a lista de laptops
 index();
+
 include(HEADER_TEMPLATE);
 ?>
 
