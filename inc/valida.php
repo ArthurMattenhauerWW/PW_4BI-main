@@ -35,12 +35,12 @@ try {
 
     // Dados recebidos do formulário
     $usuario = trim($_POST['login']);
-    $senha = criptografia($_POST['senha']);
+    $senha = $_POST['senha'];
 
-    // CONSULTA: agora também busca a foto!
+    // Buscar usuário pelo login
     $sql = "SELECT id, nome, user, password, perfil, foto
             FROM usuarios
-            WHERE user = ? AND password = ?
+            WHERE user = ?
             LIMIT 1";
 
     $stmt = $bd->prepare($sql);
@@ -49,7 +49,7 @@ try {
         throw new Exception("Erro ao preparar consulta: " . $bd->error);
     }
 
-    $stmt->bind_param("ss", $usuario, $senha);
+    $stmt->bind_param("s", $usuario);
 
     $stmt->execute();
 
@@ -65,28 +65,49 @@ try {
 
     if ($stmt->fetch()) {
 
-        // Renovar o identificador da sessão
-        session_regenerate_id(true);
+        // Verificar senha conforme o perfil
+        if ($perfil === 'admin') {
 
-        // Guardar informações do usuário na sessão
-        $_SESSION['id'] = $id;
-        $_SESSION['nome'] = $nome;
-        $_SESSION['user'] = $user;
-        $_SESSION['perfil'] = $perfil;
+            // Administrador: senha criptografada
+            $senhaCorreta = ($password === criptografia($senha));
 
-        // AQUI ESTÁ A CORREÇÃO PRINCIPAL!
-        $_SESSION['foto'] = $foto;
+        } else {
 
-        // Mensagem de boas-vindas
-        $_SESSION['message'] = "Bem-vindo, " . $nome . "!";
-        $_SESSION['type'] = "success";
+            // Usuário comum: senha sem criptografia
+            $senhaCorreta = ($password === $senha);
 
-        $stmt->close();
-        $bd->close();
+        }
 
-        // Voltar para a página inicial
-        header("Location: " . BASEURL . "index.php");
-        exit;
+        if ($senhaCorreta) {
+
+            // Renovar identificador da sessão
+            session_regenerate_id(true);
+
+            // Guardar informações do usuário na sessão
+            $_SESSION['id'] = $id;
+            $_SESSION['nome'] = $nome;
+            $_SESSION['user'] = $user;
+            $_SESSION['perfil'] = $perfil;
+            $_SESSION['foto'] = $foto;
+
+            // Mensagem de boas-vindas
+            $_SESSION['message'] = "Bem-vindo, " . $nome . "!";
+            $_SESSION['type'] = "success";
+
+            $stmt->close();
+            $bd->close();
+
+            // Voltar para a página inicial
+            header("Location: " . BASEURL . "index.php");
+            exit;
+
+        } else {
+
+            throw new Exception(
+                "Não foi possível entrar! Verifique seu usuário e senha."
+            );
+
+        }
 
     } else {
 
